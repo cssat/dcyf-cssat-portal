@@ -45,7 +45,6 @@ s3_client = boto3.client(
 )
 
 current_date = date.today()
-file_name = 'ABUSE_TYPE_DIM.TXT'
 
 files = os.listdir(dir_location)
 
