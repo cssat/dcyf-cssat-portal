@@ -3,6 +3,7 @@
 import paramiko 
 import pysftp
 import os
+import glob
 import boto3
 import pyodbc
 from paramiko import RSAKey
@@ -31,11 +32,14 @@ sftp_connection = pysftp.Connection(
 )
 
 def get_files_from_sft(conn, remotedir, localdir):
+    if os.path.isdir(localdir) is False:
+      os.mkdir(localdir)
+
+    dir_location = '{}/{}'.format(os.curdir, localdir)
+
     return conn.get_d(remotedir, localdir)
 
-dir_location = '{}/{}'.format(os.curdir, 'data/')
-
-get_files_from_sft(sftp_connection, 'POC_data_out', dir_location)
+get_files_from_sft(sftp_connection, 'POC_data_out/test/', 'data/')
 
 s3_client = boto3.client(
     service_name='s3',
@@ -44,10 +48,12 @@ s3_client = boto3.client(
     aws_secret_access_key=s3_aws_secret_access_key
 )
 
-current_date = date.today()
+def put_files_s3(conn, localdir):
+  dir_location = '{}/{}'.format(os.curdir, localdir)
+  files = glob.glob(dir_location + "*.zip")
+  remotedir = date.today()
 
-files = os.listdir(dir_location)
+  for file in files:
+    conn.upload_file(file, 'dcyf-data-extracts', '{}/{}'.format(remotedir, file.replace(localdir, '')))
 
-for file in files:
-  print('{}/{}'.format(current_date, file))
-  s3_client.upload_file('./data/{}'.format(file), 'dcyf-data-extracts', '{}/{}'.format(current_date, file))
+put_files_s3(s3_client, 'data/')
