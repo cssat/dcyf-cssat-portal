@@ -1,0 +1,6 @@
+paramiko 
+pysftp
+boto3
+pyodbc
+paramiko
+datetime
